@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>斯诺克比赛查询</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: linear-gradient(135deg, #07111f, #102a43);
+      color: #e5e7eb;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 24px;
+    }
+
+    .card {
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #1e3a5f;
+      border-radius: 22px;
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.45);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 36px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin: 10px 0 24px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    select, input, button {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+
+    select, input {
+      background: #1e293b;
+      color: white;
+      outline: none;
+    }
+
+    input {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(34,197,94,0.3);
+    }
+
+    .summary {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: #0f766e;
+      padding: 12px 18px;
+      border-radius: 14px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #020617;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    th {
+      background: #064e3b;
+      color: #d1fae5;
+      padding: 14px;
+      text-align: left;
+    }
+
+    td {
+      padding: 14px;
+      border-bottom: 1px solid #1f2937;
+    }
+
+    tr:hover {
+      background: #172554;
+    }
+
+    .players {
+      color: #bae6fd;
+      font-weight: bold;
+    }
+
+    .score {
+      color: #facc15;
+      font-weight: bold;
+    }
+
+    .winner {
+      color: #4ade80;
+      font-weight: bold;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .finished {
+      background: #14532d;
+      color: #bbf7d0;
+    }
+
+    .upcoming {
+      background: #1e40af;
+      color: #bfdbfe;
+    }
+
+    .unknown {
+      background: #713f12;
+      color: #fef3c7;
+    }
+
+    .empty {
+      text-align: center;
+      color: #94a3b8;
+      padding: 34px;
+    }
+
+    .footer {
+      color: #64748b;
+      margin-top: 18px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>斯诺克比赛查询</h1>
+      <div class="subtitle">历史比赛、新比赛、比分和球员查询</div>
+
+      <div class="controls">
+        <select id="mode">
+          <option value="history">历史比赛</option>
+          <option value="upcoming">新比赛</option>
+        </select>
+
+        <input id="search" placeholder="搜索球员 / 赛事，例如 Ronnie、Trump、World">
+
+        <button onclick="load()">查询</button>
+      </div>
+
+      <div class="summary">
+        <div class="stat" id="total">总数：0</div>
+        <div class="stat" id="modeText">当前：历史比赛</div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>赛事</th>
+            <th>球员</th>
+            <th>比分</th>
+            <th>胜者</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="data">
+          <tr>
+            <td colspan="6" class="empty">正在加载数据...</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="footer">数据来源：snooker.org</div>
+    </div>
+  </div>
+
+  <script>
+    async function load() {
+      const mode = document.getElementById("mode").value;
+      const keyword = document.getElementById("search").value.toLowerCase();
+
+      document.getElementById("data").innerHTML =
+        `<tr><td colspan="6" class="empty">正在加载数据...</td></tr>`;
+
+      const res = await fetch("/api/matches?mode=" + mode);
+      const data = await res.json();
+
+      let html = "";
+      let count = 0;
+
+      for (let m of data) {
+        const text = `${m.date} ${m.event} ${m.player1} ${m.player2} ${m.score} ${m.winner} ${m.status}`.toLowerCase();
+
+        if (keyword && !text.includes(keyword)) {
+          continue;
+        }
+
+        count++;
+
+        let badgeClass = "finished";
+        if (m.status === "未开始") badgeClass = "upcoming";
+        if (m.status === "未公布") badgeClass = "unknown";
+
+        let players = "";
+        if (m.player1 || m.player2) {
+          players = `${m.player1 || ""} ${m.player2 ? "vs " + m.player2 : ""}`;
+        } else {
+          players = "暂未公布";
+        }
+
+        html += `
+          <tr>
+            <td>${m.date || "-"}</td>
+            <td>${m.event || "-"}</td>
+            <td class="players">${players}</td>
+            <td class="score">${m.score || "-"}</td>
+            <td class="winner">${m.winner || "-"}</td>
+            <td><span class="badge ${badgeClass}">${m.status || "-"}</span></td>
+          </tr>
+        `;
+      }
+
+      if (!html) {
+        html = `<tr><td colspan="6" class="empty">没有找到比赛</td></tr>`;
+      }
+
+      document.getElementById("data").innerHTML = html;
+      document.getElementById("total").innerText = "总数：" + count;
+      document.getElementById("modeText").innerText =
+        "当前：" + (mode === "history" ? "历史比赛" : "新比赛");
+    }
+
+    document.getElementById("search").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") {
+        load();
+      }
+    });
+
+    load();
+  </script>
+</body>
+</html>
