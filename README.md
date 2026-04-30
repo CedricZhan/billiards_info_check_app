@@ -1,1 +1,1 @@
-# billiards_app
+# You can check Snooker competitions information here.
