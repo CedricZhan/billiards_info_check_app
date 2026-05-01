@@ -31,7 +31,7 @@
       height: 100%;
       overflow: hidden;
       color: var(--ink) !important;
-      font-family: "Microsoft YaHei", Arial, sans-serif;
+      font-family: "Microsoft YaHei", "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", Arial, sans-serif;
       background: #063d17 !important;
     }
 
@@ -58,6 +58,23 @@
       flex-direction: column;
       overflow: hidden;
     }
+
+    .player-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+}
+
+    .vs {
+  margin: 0 5px;
+  color: #79552d;
+}
+
+    .flag {
+  display: inline-flex;
+  margin-left: 3px;
+  vertical-align: middle;
+}
 
     .hero {
       display: grid;
@@ -452,6 +469,46 @@
           </tr>`;
     }
 
+const nameMap = {
+  "Ding Junhui": "丁俊晖",
+  "Zhao Xintong": "赵心童",
+  "Wu Yize": "吴宜泽",
+  "Pang Junxu": "庞俊旭",
+  "Si Jiahui": "斯佳辉",
+  "Fan Zhengyi": "范争一",
+  "Lei Peifan": "雷佩凡",
+  "Zhang Anda": "张安达"
+};
+
+const chinaFlag = `
+<span class="flag">
+<svg width="18" height="12" viewBox="0 0 30 20">
+  <rect width="30" height="20" fill="#DE2910"/>
+  <g fill="#FFDE00">
+    <polygon points="5,2 6,5 3,3.5 7,3.5 4,5"/>
+    <polygon points="10,2 10.5,3 9.5,2.5"/>
+    <polygon points="11,4 11.5,5 10.5,4.5"/>
+    <polygon points="11,6 11.5,7 10.5,6.5"/>
+    <polygon points="10,8 10.5,9 9.5,8.5"/>
+  </g>
+</svg>
+</span>
+`;
+
+function translateName(name) {
+  if (!name) return name;
+
+  for (let key in nameMap) {
+    if (name.includes(key)) {
+      let newName = name.replace(key, nameMap[key]);
+      newName = newName.replace(/\(.*?\)/g, "").trim();
+      return newName + chinaFlag;
+    }
+  }
+
+  return name;
+}
+
     async function load() {
       const isHistory = currentMode === "history";
       const colCount = isHistory ? 6 : 5;
@@ -480,9 +537,9 @@
         if (m.status === "未开始") badgeClass = "upcoming";
         if (m.status === "未公布") badgeClass = "unknown";
 
-        const p1 = m.player1 || "undecided";
-        const p2 = m.player2 || "undecided";
-        const players = `${p1} vs ${p2}`;
+        const p1 = translateName(m.player1 || "undecided");
+        const p2 = translateName(m.player2 || "undecided");
+        const players = `<span class="player-name">${p1}</span><span class="vs">vs</span><span class="player-name">${p2}</span>`;
 
         if (isHistory) {
           html += `
