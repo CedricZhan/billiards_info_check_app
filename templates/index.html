@@ -2,267 +2,514 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
   <title>斯诺克比赛查询</title>
-
   <style>
-    /* 强制亮色（无视浏览器暗色） */
-    html, body {
-      background: #f8fafc !important;
-      color: #0f172a !important;
+    :root {
+      color-scheme: light;
+      --felt: #0f5f24;
+      --felt-dark: #063d17;
+      --wood: #f3c681;
+      --wood-light: #ffe3ad;
+      --wood-line: rgba(112, 60, 18, 0.22);
+      --wood-dark: #5b2c12;
+      --ink: #2a1608;
+      --muted: #79552d;
+      --green: #247a25;
+      --green-deep: #145a1c;
+      --cream: #fff2cf;
+      --red: #c2410c;
+      --shadow: 0 22px 50px rgba(0, 0, 0, 0.34);
     }
 
-    body {
+    * { box-sizing: border-box; }
+
+    html, body {
       margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      color: var(--ink) !important;
       font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #063d17 !important;
     }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("/static/table.png");
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -2;
+    }
+
 
     .container {
-      max-width: 1280px;
-      margin: 40px auto;
-      padding: 24px;
+      max-width: 1240px;
+      height: 100vh;
+      margin: 0 auto;
+      padding: 30px 18px 24px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    .card {
-      background: white;
-      border-radius: 20px;
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 245px;
+      gap: 24px;
+      align-items: stretch;
+      margin-bottom: 18px;
+      flex: 0 0 auto;
+    }
+
+    .wood-card,
+    .hero-main,
+    .mascot-card,
+    .panel,
+    .stat {
+      background:
+        linear-gradient(rgba(255, 235, 190, .18), rgba(210, 130, 55, .12)),
+        url("/static/wood.png");
+      background-size: 100% 100%;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 1px solid rgba(92, 48, 15, .35);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.45);
+    }
+
+    .hero-main {
+      border-radius: 24px;
       padding: 28px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 230px;
+    }
+
+    .topline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: rgba(36, 122, 37, .18);
+      color: var(--green-deep);
+      font-size: 13px;
+      font-weight: 900;
+      margin-bottom: 12px;
+      border: 1px solid rgba(36, 122, 37, .22);
     }
 
     h1 {
       margin: 0;
-      font-size: 34px;
+      font-size: clamp(32px, 4vw, 48px);
+      letter-spacing: -1.6px;
+      line-height: 1.08;
+      color: #3b1d09;
+      text-shadow: 0 2px 0 rgba(255,255,255,.36);
     }
 
     .subtitle {
-      color: #64748b;
-      margin: 10px 0 24px;
+      color: #5e3b1a;
+      margin: 12px 0 0;
+      font-size: 15px;
+      line-height: 1.7;
+      font-weight: 600;
     }
 
     .controls {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto minmax(240px, 1fr) auto;
       gap: 12px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
+      margin-top: 26px;
       align-items: center;
     }
 
-    input {
-      border-radius: 12px;
-      padding: 12px 16px;
-      font-size: 15px;
-      border: 1px solid #e2e8f0;
-      flex: 1;
-      min-width: 260px;
+    .tabs {
+      display: inline-flex;
+      gap: 6px;
+      padding: 6px;
+      border-radius: 16px;
+      background: rgba(255, 244, 214, .72);
+      border: 1px solid rgba(101, 61, 18, .22);
     }
 
     button {
-      border: none;
+      border: 0;
       border-radius: 12px;
-      padding: 12px 18px;
+      padding: 12px 17px;
       font-size: 15px;
+      font-weight: 900;
       cursor: pointer;
-      font-weight: bold;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+      white-space: nowrap;
+      font-family: inherit;
     }
 
-    /* 模式按钮 */
+    button:hover { transform: translateY(-1px); }
+
     .mode-btn {
-      background: #e2e8f0;
-      color: #0f172a;
+      background: transparent;
+      color: #583415;
     }
 
     .mode-btn.active {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: white;
+      background: linear-gradient(135deg, #2d8b2f, #17691f);
+      color: #fff6d7;
+      box-shadow: 0 9px 20px rgba(17, 82, 25, .28);
+    }
+
+    .search-wrap { position: relative; }
+
+    .search-wrap span {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #906735;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid rgba(96, 56, 19, .22);
+      border-radius: 15px;
+      background: rgba(255, 248, 231, .92);
+      color: var(--ink);
+      outline: none;
+      padding: 14px 16px 14px 42px;
+      font-size: 15px;
+      box-shadow: inset 0 1px 4px rgba(91, 44, 18, .08);
+    }
+
+    input:focus {
+      border-color: rgba(36, 122, 37, .55);
+      box-shadow: 0 0 0 4px rgba(36, 122, 37, .16);
     }
 
     .search-btn {
-      background: #2563eb;
-      color: white;
+      background: linear-gradient(135deg, #2d8b2f, #17691f);
+      color: #fff6d7;
+      box-shadow: 0 11px 24px rgba(17, 82, 25, .34);
     }
 
-    .search-btn:hover {
-      transform: translateY(-1px);
+    .mascot-card {
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      min-height: 230px;
+      border-radius: 24px;
+    }
+
+    .mascot-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 18px;
+      display: block;
+      border: 2px solid rgba(255,255,255,.55);
     }
 
     .summary {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+      flex: 0 0 auto;
     }
 
     .stat {
-      background: #e0f2fe;
-      padding: 10px 16px;
-      border-radius: 12px;
-      font-weight: bold;
+      border-radius: 18px;
+      padding: 17px 20px;
+    }
+
+    .stat-label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 7px;
+      font-weight: 800;
+    }
+
+    .stat-value {
+      font-size: 23px;
+      font-weight: 950;
+      color: #277020;
+    }
+
+    .panel {
+      border-radius: 20px;
+      overflow: hidden;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--wood-line);
+      background: rgba(255, 226, 171, .38);
+    }
+
+    .table-title strong { font-size: 19px; color: #3b1d09; }
+    .table-title span { color: var(--muted); font-size: 13px; font-weight: 700; }
+
+    .table-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      border-radius: 12px;
-      overflow: hidden;
+      table-layout: fixed;
+      min-width: 860px;
+      background: transparent;
     }
 
     th {
-      background: #f1f5f9;
-      padding: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background:
+        linear-gradient(rgba(255, 236, 190, .48), rgba(255, 236, 190, .48)),
+        url("/static/wood.png");
+      background-size: 100% 100%;
+      color: #4d2b10;
+      padding: 14px 16px;
       text-align: left;
+      font-size: 13px;
+      letter-spacing: .2px;
+      border-bottom: 1px solid var(--wood-line);
+      font-weight: 900;
     }
 
     td {
-      padding: 14px;
-      border-bottom: 1px solid #e2e8f0;
+      padding: 16px;
+      border-bottom: 1px solid rgba(122, 75, 25, .18);
+      vertical-align: middle;
+      font-size: 15px;
+      font-weight: 650;
     }
 
-    tr:hover {
-      background: #f8fafc;
-    }
+    tr:hover td { background: rgba(255, 246, 220, .42); }
 
-    .players {
-      font-weight: bold;
-      color: #0369a1;
-    }
-
-    .score {
-      font-weight: bold;
-      color: #ca8a04;
-    }
-
-    .winner {
-      font-weight: bold;
-      color: #16a34a;
-    }
+    .players { color: #064e3b; font-weight: 950; }
+    .score { color: #b5440a; font-weight: 950; white-space: nowrap; }
+    .winner { color: #247a25; font-weight: 950; white-space: nowrap; }
 
     .badge {
-      padding: 5px 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 11px;
       border-radius: 999px;
-      font-size: 13px;
-      font-weight: bold;
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
     }
 
-    .finished { background: #dcfce7; color: #166534; }
-    .upcoming { background: #dbeafe; color: #1e40af; }
-    .unknown { background: #fef3c7; color: #92400e; }
+    .finished { background: #dff8c9; color: #17691f; }
+    .upcoming { background: #e9f6d2; color: #17691f; }
+    .unknown { background: #fff3bf; color: #8a4b0d; }
 
     .empty {
       text-align: center;
-      color: #94a3b8;
-      padding: 30px;
+      color: #906735;
+      padding: 40px;
+      font-weight: 900;
     }
 
+    .footer {
+      color: #e9f6d2;
+      margin-top: 16px;
+      font-size: 13px;
+      text-align: right;
+      text-shadow: 0 1px 2px rgba(0,0,0,.45);
+    }
+
+    @media (max-width: 860px) {
+      .container { padding: 18px 12px 20px; height: 100vh; overflow: hidden; }
+      .hero { grid-template-columns: 1fr; }
+      .mascot-card { max-height: 230px; }
+      .controls { grid-template-columns: 1fr; }
+      .tabs { width: 100%; }
+      .mode-btn { flex: 1; }
+      .summary { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
-
 <body>
-<div class="container">
-  <div class="card">
-    <h1>斯诺克比赛查询</h1>
-    <div class="subtitle">历史比赛 & 未来比赛</div>
+  <div class="container">
+    <section class="hero">
+      <div class="hero-main">
+        <div>
+          <div class="topline">🔴 SNOOKER MATCH CENTER</div>
+          <h1>斯诺克比赛查询</h1>
+          <p class="subtitle">快速查看历史比赛、未来赛程、比分结果，并按球员或赛事名称搜索。</p>
+        </div>
 
-    <div class="controls">
-      <button class="mode-btn active" id="historyBtn" onclick="setMode('history')">历史赛事</button>
-      <button class="mode-btn" id="upcomingBtn" onclick="setMode('upcoming')">未来赛事</button>
+        <div class="controls">
+          <div class="tabs" aria-label="比赛类型切换">
+            <button class="mode-btn active" id="historyBtn" onclick="setMode('history')">历史赛事</button>
+            <button class="mode-btn" id="upcomingBtn" onclick="setMode('upcoming')">未来赛事</button>
+          </div>
 
-      <input id="search" placeholder="搜索球员 / 赛事">
-      <button class="search-btn" onclick="load()">查询</button>
-    </div>
+          <div class="search-wrap">
+            <span>⌕</span>
+            <input id="search" placeholder="搜索球员 / 赛事，例如 Ronnie、Trump、World">
+          </div>
 
-    <div class="summary">
-      <div class="stat" id="total">总数：0</div>
-      <div class="stat" id="modeText">当前：历史比赛</div>
-    </div>
+          <button class="search-btn" onclick="load()">查询</button>
+        </div>
+      </div>
 
-    <table>
-      <thead id="tableHead"></thead>
-      <tbody id="data">
-        <tr><td class="empty">加载中...</td></tr>
-      </tbody>
-    </table>
+      <aside class="mascot-card">
+        <img src="/static/snooker_mascot.png" alt="斯诺克卡通形象">
+      </aside>
+    </section>
 
+    <section class="summary">
+      <div class="stat">
+        <div class="stat-label">结果数量</div>
+        <div class="stat-value" id="total">0</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">当前列表</div>
+        <div class="stat-value" id="modeText">历史赛事</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">数据来源</div>
+        <div class="stat-value">snooker.org</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="table-title">
+        <strong id="tableTitle">历史赛事</strong>
+        <span>支持按球员名 / 赛事名称筛选</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead id="tableHead"></thead>
+          <tbody id="data">
+            <tr><td colspan="6" class="empty">正在加载数据...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer">数据来源：snooker.org</div>
   </div>
-</div>
 
-<script>
-  let currentMode = "history";
+  <script>
+    let currentMode = "history";
 
-  function setMode(mode) {
-    currentMode = mode;
-
-    document.getElementById("historyBtn").classList.toggle("active", mode === "history");
-    document.getElementById("upcomingBtn").classList.toggle("active", mode === "upcoming");
-
-    load();
-  }
-
-  function renderHeader(isHistory) {
-    document.getElementById("tableHead").innerHTML = isHistory
-      ? `<tr>
-          <th>日期</th>
-          <th>赛事</th>
-          <th>球员</th>
-          <th>比分</th>
-          <th>胜者</th>
-          <th>状态</th>
-        </tr>`
-      : `<tr>
-          <th>日期</th>
-          <th>赛事</th>
-          <th>球员</th>
-          <th>比分</th>
-          <th>状态</th>
-        </tr>`;
-  }
-
-  async function load() {
-    const isHistory = currentMode === "history";
-    const keyword = document.getElementById("search").value.toLowerCase();
-
-    renderHeader(isHistory);
-
-    const res = await fetch("/api/matches?mode=" + currentMode);
-    const data = await res.json();
-
-    let html = "";
-    let count = 0;
-
-    for (let m of data) {
-      const text = `${m.date} ${m.event} ${m.player1} ${m.player2}`.toLowerCase();
-      if (keyword && !text.includes(keyword)) continue;
-
-      count++;
-
-      const players = `${m.player1} vs ${m.player2}`;
-
-      if (isHistory) {
-        html += `<tr>
-          <td>${m.date}</td>
-          <td>${m.event}</td>
-          <td class="players">${players}</td>
-          <td class="score">${m.score}</td>
-          <td class="winner">${m.winner}</td>
-          <td><span class="badge finished">${m.status}</span></td>
-        </tr>`;
-      } else {
-        html += `<tr>
-          <td>${m.date}</td>
-          <td>${m.event}</td>
-          <td class="players">${players}</td>
-          <td class="score">${m.score}</td>
-          <td><span class="badge upcoming">${m.status}</span></td>
-        </tr>`;
-      }
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById("historyBtn").classList.toggle("active", mode === "history");
+      document.getElementById("upcomingBtn").classList.toggle("active", mode === "upcoming");
+      load();
     }
 
-    if (!html) html = `<tr><td class="empty">没有找到比赛</td></tr>`;
+    function renderHeader(isHistory) {
+      document.getElementById("tableHead").innerHTML = isHistory
+        ? `<tr>
+            <th style="width: 12%">日期</th>
+            <th style="width: 24%">赛事</th>
+            <th style="width: 28%">球员</th>
+            <th style="width: 10%">比分</th>
+            <th style="width: 14%">胜者</th>
+            <th style="width: 12%">状态</th>
+          </tr>`
+        : `<tr>
+            <th style="width: 14%">日期</th>
+            <th style="width: 26%">赛事</th>
+            <th style="width: 36%">球员</th>
+            <th style="width: 12%">比分</th>
+            <th style="width: 12%">状态</th>
+          </tr>`;
+    }
 
-    document.getElementById("data").innerHTML = html;
-    document.getElementById("total").innerText = "总数：" + count;
-    document.getElementById("modeText").innerText = "当前：" + (isHistory ? "历史比赛" : "未来比赛");
-  }
+    async function load() {
+      const isHistory = currentMode === "history";
+      const colCount = isHistory ? 6 : 5;
+      const keyword = document.getElementById("search").value.toLowerCase();
+      const modeLabel = isHistory ? "历史赛事" : "未来赛事";
 
-  load();
-</script>
+      renderHeader(isHistory);
+      document.getElementById("tableTitle").innerText = modeLabel;
+      document.getElementById("modeText").innerText = modeLabel;
+      document.getElementById("data").innerHTML =
+        `<tr><td colspan="${colCount}" class="empty">正在加载数据...</td></tr>`;
+
+      const res = await fetch("/api/matches?mode=" + currentMode);
+      const data = await res.json();
+
+      let html = "";
+      let count = 0;
+
+      for (let m of data) {
+        const text = `${m.date || ""} ${m.event || ""} ${m.round || ""} ${m.player1 || ""} ${m.player2 || ""} ${m.score || ""} ${m.winner || ""} ${m.status || ""}`.toLowerCase();
+        if (keyword && !text.includes(keyword)) continue;
+
+        count++;
+
+        let badgeClass = "finished";
+        if (m.status === "未开始") badgeClass = "upcoming";
+        if (m.status === "未公布") badgeClass = "unknown";
+
+        const p1 = m.player1 || "undecided";
+        const p2 = m.player2 || "undecided";
+        const players = `${p1} vs ${p2}`;
+
+        if (isHistory) {
+          html += `
+            <tr>
+              <td>${m.date || "-"}</td>
+              <td>${m.event || "-"}</td>
+              <td class="players">${players}</td>
+              <td class="score">${m.score || "-"}</td>
+              <td class="winner">${m.winner || "-"}</td>
+              <td><span class="badge ${badgeClass}">${m.status || "-"}</span></td>
+            </tr>`;
+        } else {
+          html += `
+            <tr>
+              <td>${m.date || "-"}</td>
+              <td>${m.event || "-"}</td>
+              <td class="players">${players}</td>
+              <td class="score">${m.score || "-"}</td>
+              <td><span class="badge ${badgeClass}">${m.status || "-"}</span></td>
+            </tr>`;
+        }
+      }
+
+      if (!html) html = `<tr><td colspan="${colCount}" class="empty">没有找到比赛</td></tr>`;
+
+      document.getElementById("data").innerHTML = html;
+      document.getElementById("total").innerText = count;
+    }
+
+    document.getElementById("search").addEventListener("keydown", function(e) {
+      if (e.key === "Enter") load();
+    });
+
+    load();
+  </script>
 </body>
 </html>
