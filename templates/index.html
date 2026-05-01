@@ -36,17 +36,18 @@
     }
 
     body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image: url("/static/table.png");
-      background-size: 100% 100%;
-      background-position: center;
-      background-repeat: no-repeat;
-      z-index: -2;
-    }
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
 
+  background-image: url("/static/table.png");
+  background-size: 100vw 100vh;  /* 强制拉伸到整个页面 */
+  background-position: center;
+  background-repeat: no-repeat;
+
+  z-index: -2;
+}
 
     .container {
       max-width: 1240px;
@@ -244,6 +245,12 @@
       font-weight: 950;
       color: #277020;
     }
+
+    .icon {
+  margin-right: 6px;
+  font-size: 14px;
+  vertical-align: middle;
+}
 
     .panel {
       border-radius: 20px;
