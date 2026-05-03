@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ name }} - 球员页面</title>
+
+  <style>
+    :root {
+      --felt: #063d17;
+      --ink: #2a1608;
+      --muted: #79552d;
+      --green: #247a25;
+      --green-deep: #145a1c;
+      --wood-line: rgba(112, 60, 18, 0.22);
+      --shadow: 0 22px 50px rgba(0, 0, 0, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      color: var(--ink);
+      background: #063d17;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("/static/table.png");
+      background-size: 100vw 100vh;
+      background-position: center;
+      background-repeat: no-repeat;
+      z-index: -2;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 32px 18px;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 18px;
+      color: #fff2cf;
+      text-decoration: none;
+      font-weight: 900;
+      text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    }
+
+    .wood-card {
+      background:
+        linear-gradient(rgba(255, 235, 190, .18), rgba(210, 130, 55, .12)),
+        url("/static/wood.png");
+      background-size: 100% 100%;
+      border: 1px solid rgba(92, 48, 15, .35);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.45);
+      border-radius: 24px;
+    }
+
+    .profile {
+      padding: 28px;
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 24px;
+      margin-bottom: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      padding: 8px 13px;
+      border-radius: 999px;
+      background: rgba(36, 122, 37, .18);
+      color: var(--green-deep);
+      font-size: 13px;
+      font-weight: 900;
+      border: 1px solid rgba(36, 122, 37, .22);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 56px);
+      color: #3b1d09;
+      letter-spacing: -1.6px;
+      text-shadow: 0 2px 0 rgba(255,255,255,.36);
+    }
+
+    .nickname {
+      margin: 8px 0 14px;
+      color: #145a1c;
+      font-size: 20px;
+      font-weight: 950;
+    }
+
+    .bio {
+      color: #5e3b1a;
+      font-size: 15px;
+      line-height: 1.8;
+      font-weight: 700;
+    }
+
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      align-content: start;
+    }
+
+    .fact {
+      background: rgba(255, 248, 231, .72);
+      border: 1px solid rgba(96, 56, 19, .18);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .fact .label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .fact .value {
+      font-size: 26px;
+      color: #247a25;
+      font-weight: 950;
+    }
+
+    .section {
+      padding: 22px;
+      margin-top: 18px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      color: #3b1d09;
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .loading {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: center;
+      padding: 45px;
+      color: #5e3b1a;
+      font-weight: 950;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 4px solid rgba(36, 122, 37, .2);
+      border-top-color: #247a25;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 16px;
+      background: rgba(255, 248, 231, .55);
+    }
+
+    th, td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--wood-line);
+      text-align: left;
+      font-weight: 750;
+    }
+
+    th {
+      color: #4d2b10;
+      font-size: 13px;
+      background: rgba(255, 226, 171, .5);
+    }
+
+    td {
+      color: #2a1608;
+      font-size: 14px;
+    }
+
+    .score {
+      color: #b5440a;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .empty {
+      padding: 36px;
+      text-align: center;
+      font-weight: 900;
+      color: #79552d;
+    }
+
+    @media (max-width: 820px) {
+      .profile { grid-template-columns: 1fr; }
+      .facts { grid-template-columns: 1fr 1fr; }
+      table { min-width: 780px; }
+      .table-wrap { overflow-x: auto; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <a class="back" href="/">← 返回首页</a>
+
+    <section class="profile wood-card">
+      <div>
+        <div class="tag">🎱 PLAYER PROFILE</div>
+        <h1 id="playerTitle">{{ name }}</h1>
+        <div class="nickname" id="nickname">The Rocket｜火箭</div>
+        <div class="bio" id="bio">
+          罗尼·奥沙利文是英格兰职业斯诺克选手，被广泛认为是斯诺克历史上最具天赋、成就最高的球员之一。他以极快的击球节奏、强大的连续得分能力和左右手技术闻名。
+        </div>
+      </div>
+
+      <div class="facts">
+        <div class="fact">
+          <div class="label">世锦赛冠军</div>
+          <div class="value" id="worldTitles">7</div>
+        </div>
+        <div class="fact">
+          <div class="label">英锦赛冠军</div>
+          <div class="value" id="ukTitles">8</div>
+        </div>
+        <div class="fact">
+          <div class="label">大师赛冠军</div>
+          <div class="value" id="mastersTitles">8</div>
+        </div>
+        <div class="fact">
+          <div class="label">三大赛冠军</div>
+          <div class="value" id="tripleCrown">23</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wood-card">
+      <div class="section-title">
+        <span>相关比赛</span>
+        <span id="matchCount">0 场</span>
+      </div>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        正在加载球员比赛数据...
+      </div>
+
+      <div class="table-wrap">
+        <table id="matchTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>赛事</th>
+              <th>球员</th>
+              <th>比分</th>
+              <th>胜者</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody id="matches"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const playerName = {{ name|tojson }};
+
+    const playerProfiles = {
+  "Ronnie O'Sullivan": {
+    cnName: "罗尼·奥沙利文",
+    nickname: "The Rocket｜火箭",
+    bio: "罗尼·奥沙利文是英格兰职业斯诺克选手，被广泛认为是斯诺克历史上最伟大的球员之一。他拥有极快的击球节奏、顶级清台能力和左右手击球技术。",
+    worldTitles: 7,
+    ukTitles: 8,
+    mastersTitles: 8,
+    tripleCrown: 23
+  },
+
+  "Mark Selby": {
+    cnName: "马克·塞尔比",
+    nickname: "The Jester｜小丑",
+    bio: "马克·塞尔比是英格兰职业斯诺克选手，以顽强的防守、极强的心理素质和逆转能力著称，被认为是现代斯诺克最具战术性的球员之一。",
+    worldTitles: 4,
+    ukTitles: 2,
+    mastersTitles: 3,
+    tripleCrown: 9
+  },
+
+  "John Higgins": {
+    cnName: "约翰·希金斯",
+    nickname: "The Wizard of Wishaw｜巫师",
+    bio: "约翰·希金斯是苏格兰斯诺克传奇球员，以全面技术、稳定发挥和顶级战术能力闻名，是历史上最成功的选手之一。",
+    worldTitles: 4,
+    ukTitles: 3,
+    mastersTitles: 2,
+    tripleCrown: 9
+  },
+
+  "Mark Williams": {
+    cnName: "马克·威廉姆斯",
+    nickname: "The Welsh Potting Machine｜威尔士进攻机器",
+    bio: "马克·威廉姆斯是威尔士斯诺克传奇球员，以精准进攻、放松心态和稳定发挥著称，是三大赛全满贯得主之一。",
+    worldTitles: 3,
+    ukTitles: 2,
+    mastersTitles: 2,
+    tripleCrown: 7
+  }
+    ,
+
+  "Ding Junhui": {
+    cnName: "丁俊晖",
+    nickname: "中国龙",
+    bio: "丁俊晖是中国最具代表性的斯诺克球员之一，被认为是推动斯诺克在中国发展的关键人物，以稳定的技术和出色的围球能力著称。",
+    worldTitles: 0,
+    ukTitles: 3,
+    mastersTitles: 1,
+    tripleCrown: 4
+  },
+
+  "Zhao Xintong": {
+    cnName: "赵心童",
+    nickname: "旋风",
+    bio: "赵心童是中国斯诺克新生代代表球员之一，以流畅的进攻风格和极高的天赋著称，曾夺得英锦赛冠军。",
+    worldTitles: 1,
+    ukTitles: 1,
+    mastersTitles: 0,
+    tripleCrown: 1
+  }
+  ,
+
+"Neil Robertson": {
+  cnName: "尼尔·罗伯逊",
+  nickname: "The Thunder from Down Under｜澳洲火炮",
+  bio: "尼尔·罗伯逊是澳大利亚斯诺克名将，以精准进攻和稳定得分能力著称，是少数完成三大赛全满贯的球员之一。",
+  worldTitles: 1,
+  ukTitles: 1,
+  mastersTitles: 2,
+  tripleCrown: 4
+},
+
+"Shaun Murphy": {
+  cnName: "肖恩·墨菲",
+  nickname: "The Magician｜魔术师",
+  bio: "肖恩·墨菲是英格兰斯诺克名将，以强大的进攻火力和关键球能力著称，2005年世锦赛冠军。",
+  worldTitles: 1,
+  ukTitles: 1,
+  mastersTitles: 1,
+  tripleCrown: 3
+}
+,
+
+"Mark Allen": {
+  cnName: "马克·艾伦",
+  nickname: "The Pistol｜小钢炮",
+  bio: "马克·艾伦是北爱尔兰斯诺克名将，以强悍进攻和稳定发挥著称，是近年来最具竞争力的球员之一。",
+  worldTitles: 0,
+  ukTitles: 1,
+  mastersTitles: 1,
+  tripleCrown: 2
+},
+
+"Barry Hawkins": {
+  cnName: "巴里·霍金斯",
+  nickname: "The Hawk｜鹰眼",
+  bio: "巴里·霍金斯是英格兰斯诺克名将，以稳定的发挥和顽强的比赛风格著称，多次在大型赛事中取得优异成绩。",
+  worldTitles: 0,
+  ukTitles: 0,
+  mastersTitles: 0,
+  tripleCrown: 0
+}
+};
+
+    function loadProfile() {
+      const profile = playerProfiles[playerName];
+
+      if (!profile) {
+        document.getElementById("playerTitle").innerText = playerName;
+        document.getElementById("nickname").innerText = "职业斯诺克球员";
+        document.getElementById("bio").innerText = "这里展示该球员的相关比赛记录。后续可以继续补充球员简介、冠军数据和技术特点。";
+        document.getElementById("worldTitles").innerText = "-";
+        document.getElementById("ukTitles").innerText = "-";
+        document.getElementById("mastersTitles").innerText = "-";
+        document.getElementById("tripleCrown").innerText = "-";
+        return;
+      }
+
+      document.getElementById("playerTitle").innerText = `${profile.cnName} / ${playerName}`;
+      document.getElementById("nickname").innerText = profile.nickname;
+      document.getElementById("bio").innerText = profile.bio;
+      document.getElementById("worldTitles").innerText = profile.worldTitles;
+      document.getElementById("ukTitles").innerText = profile.ukTitles;
+      document.getElementById("mastersTitles").innerText = profile.mastersTitles;
+      document.getElementById("tripleCrown").innerText = profile.tripleCrown;
+    }
+
+    async function loadMatches() {
+      const loading = document.getElementById("loading");
+      const table = document.getElementById("matchTable");
+      const tbody = document.getElementById("matches");
+
+      try {
+        const res = await fetch("/api/player?name=" + encodeURIComponent(playerName));
+        const data = await res.json();
+
+        let html = "";
+
+        for (let m of data) {
+          html += `
+            <tr>
+              <td>${m.date || "-"}</td>
+              <td>${m.event || "-"}</td>
+              <td>${m.player1 || "-"} vs ${m.player2 || "-"}</td>
+              <td class="score">${m.score || "-"}</td>
+              <td>${m.winner || "-"}</td>
+              <td>${m.status || "-"}</td>
+            </tr>
+          `;
+        }
+
+        if (!html) {
+          html = `<tr><td colspan="6" class="empty">没有找到这个球员的比赛</td></tr>`;
+        }
+
+        tbody.innerHTML = html;
+        document.getElementById("matchCount").innerText = `${data.length} 场`;
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="empty">加载失败，请稍后再试</td></tr>`;
+      }
+
+      loading.style.display = "none";
+      table.style.display = "table";
+    }
+
+    loadProfile();
+    loadMatches();
+  </script>
+</body>
+</html>
