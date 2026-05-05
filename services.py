@@ -17,7 +17,6 @@ MONTHS = {
     "nov": "11", "november": "11", "dec": "12", "december": "12",
 }
 
-# 赛事名库：长名字放前面，避免 World Championship / Masters 这种短名字先误命中。
 EVENT_NAMES = [
     "Saudi Arabia Snooker Masters",
     "Northern Ireland Open",
@@ -110,14 +109,12 @@ def clean_player(name):
     name = re.sub(r"\b(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b", " ", name, flags=re.I)
     name = re.sub(r"\b\d{1,2}:\d{2}(?::\d{2})?Z?\b", " ", name)
     name = re.sub(r"\b20\d{2}\b", " ", name)
-    # snooker.org 有些单元格会把 UTC 的 Z、轮次 QF/SF 混进球员名前面。
     name = re.sub(r"^(?:Z\s+)?(?:QF|SF|Final|Semi[- ]final|Quarter[- ]final|Last \d+|Round \d+)\s+", " ", name, flags=re.I)
     name = re.sub(r"\bZ\b", " ", name)
     name = re.sub(r"\s+", " ", name).strip(" .,:;|/")
     if not name:
         return "undecided"
 
-    # “S Murphy / J Higgins”这种是候选人，不是确定人员；按需求显示 undecided。
     if "/" in name:
         return "undecided"
 
@@ -155,7 +152,6 @@ def parse_row_cells(cells, event_hint="未找到赛事", source="upcoming"):
     date = normalise_date(text)
     round_name = extract_round(text)
 
-    # Live/history-like score rows: Round, country, Player1, score1, -, score2, country, Player2
     for i in range(len(cells) - 2):
         if cells[i].isdigit() and cells[i + 1] == "-" and cells[i + 2].isdigit():
             left = [c for c in cells[:i] if not is_noise_cell(c)]
@@ -168,7 +164,6 @@ def parse_row_cells(cells, event_hint="未找到赛事", source="upcoming"):
                     "player1": p1, "player2": p2, "score": f"{cells[i]} - {cells[i+2]}", "status": "进行中",
                 }
 
-    # Upcoming/order rows: Player1, v, Player2, date
     for i, c in enumerate(cells):
         if c.lower().strip(". ") in {"v", "vs"}:
             left = [x for x in cells[:i] if not is_noise_cell(x)]
@@ -190,8 +185,6 @@ def collect_table_matches(url, source="upcoming"):
     items = []
     current_event = "未找到赛事"
 
-    # 按页面顺序走：遇到标题/说明里的赛事名就记下来，后面的 tr 没有赛事名时用最近的赛事名。
-    # 这样保留你原来的表格行解析方式，同时解决“赛事名不在同一行”的问题。
     for node in soup.find_all(["h1", "h2", "h3", "h4", "caption", "p", "div", "tr"]):
         node_text = node.get_text(" ", strip=True)
         found_event = extract_event(node_text, "")
@@ -240,8 +233,6 @@ def collect(mode):
         if mode == "history":
             return collect_history_matches()[:300]
 
-        # 保留原版本的未来赛事抓取入口：live + upcoming + order。
-        # 只改赛事名来源，不用整页第一个赛事名兜底，避免把 World Championship 套到别的比赛上。
         items = []
         for name in ["live", "upcoming", "order"]:
             try:
